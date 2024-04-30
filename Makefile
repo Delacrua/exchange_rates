@@ -1,4 +1,4 @@
 run-checks:
-	cd app && isort .
-	cd app && black .
-	cd app && mypy .
+	isort .
+	black .
+	mypy .
