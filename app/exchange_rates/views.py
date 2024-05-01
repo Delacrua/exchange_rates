@@ -4,6 +4,7 @@ from aiohttp_pydantic.oas.typing import r200
 
 from app.exchange_rates.schemes import ExchangeRequest, ExchangeResponse
 from app.exchange_rates.services.exchange_rates import ExchangeRatesService
+from app.exchange_rates.utils.exceptions import ExchangeRatesServiceException
 
 
 class ExchangeRatesView(PydanticView):
@@ -13,5 +14,5 @@ class ExchangeRatesView(PydanticView):
                 request_data=request
             )
             return web.json_response(response_data.model_dump())
-        except Exception as exc:
+        except ExchangeRatesServiceException as exc:
             return web.json_response({"error": str(exc)}, status=400)

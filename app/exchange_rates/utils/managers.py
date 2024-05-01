@@ -4,7 +4,7 @@ from decimal import Decimal
 import aiohttp
 
 from app.exchange_rates import schemes
-from app.exchange_rates.utils.exceptions import ExchangeRequestException  # type: ignore
+from app.exchange_rates.utils import exceptions  # type: ignore
 
 __all__ = [
     "AbstractManager",
@@ -24,7 +24,12 @@ class AbstractManager(ABC):
         url = self.GET_EXCHANGE_RATE_URL % symbol.upper()
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
-                result = await resp.json()
+                try:
+                    result = await resp.json()
+                except aiohttp.ClientError:
+                    raise exceptions.ExchangeRequestException(
+                        "Unable to fetch exchange data, exchange not responding"
+                    )
         return result
 
 
@@ -50,7 +55,7 @@ class BinanceManager(AbstractManager):
 
         if price is not None:
             return price.quantize(Decimal("1.0000"))
-        raise ExchangeRequestException(
+        raise exceptions.PairNotFoundException(
             f"Exchange rate for conversion pair {currency_from} -> {currency_to} not found on Binance"
         )
 
@@ -79,6 +84,6 @@ class KuCoinManager(AbstractManager):
 
         if price is not None:
             return price.quantize(Decimal("1.0000"))
-        raise ExchangeRequestException(
+        raise exceptions.PairNotFoundException(
             f"Exchange rate for conversion pair {currency_from} -> {currency_to} not found on KuCoin"
         )

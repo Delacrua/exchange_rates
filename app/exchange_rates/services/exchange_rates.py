@@ -31,6 +31,8 @@ class ExchangeRatesService:
 
         rate = None
         if (exchange := request_data.exchange) is None:
+            requests_failed = {k: False for k in self.MANAGERS}
+
             for key, manager_class in self.MANAGERS.items():
                 try:
                     manager = manager_class()
@@ -41,9 +43,14 @@ class ExchangeRatesService:
                     if rate:
                         break
                 except exceptions.ExchangeRequestException as exc:
+                    requests_failed[key] = True
                     continue
-                except NotImplementedError:
+                except exceptions.ManagerException as exc:
                     continue
+            if all(map(lambda x: x is True, requests_failed)):
+                raise exceptions.ExchangeRatesServiceException(
+                    "Unable to contact exchanges, all exchanges were not available during requests."
+                )
 
         else:
             if manager_class := self.MANAGERS.get(exchange):  # type: ignore

@@ -1,4 +1,12 @@
-class ExchangeRequestException(Exception):
+class ManagerException(Exception):
+    pass
+
+
+class ExchangeRequestException(ManagerException):
+    pass
+
+
+class PairNotFoundException(ManagerException):
     pass
 
 
