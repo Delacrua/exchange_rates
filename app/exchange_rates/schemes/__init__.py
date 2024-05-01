@@ -1,11 +1,8 @@
-from app.exchange_rates.schemes.exchange_rates import (
-    ExchangeRequest,
-    ExchangeRequestResult,
-    ExchangeResponse,
-)
+from app.exchange_rates.schemes.exchange_rates import *
 
 __all__ = [
     "ExchangeRequest",
     "ExchangeResponse",
-    "ExchangeRequestResult",
+    "BinanceExchangeRequestResult",
+    "KuCoinExchangeRequestResult",
 ]

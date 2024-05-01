@@ -29,6 +29,8 @@ class ExchangeRatesService:
                         currency_to=request_data.currency_to,
                     )
                     exchange = key
+                    if rate:
+                        break
                 except exceptions.ExchangeRequestException as exc:
                     continue
                 except NotImplementedError:
@@ -45,12 +47,13 @@ class ExchangeRatesService:
                 )
             else:
                 raise exceptions.ExchangeRatesServiceException(
-                    "Invalid request parameter: exchange. The exchange is incorrect or not supported"
+                    "Invalid request parameter: exchange. The exchange is incorrect or not supported."
                 )
 
         if rate is None:
             raise exceptions.ExchangeRatesServiceException(
-                "Could not find exchange rate for currency pair"
+                "Could not find exchange rate for currency pair on any of the supported exchanges. "
+                "Currency pair is incorrect or not supported."
             )
 
         response = ExchangeResponse.model_validate(

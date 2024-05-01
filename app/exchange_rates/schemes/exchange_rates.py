@@ -1,9 +1,12 @@
+from decimal import Decimal
+
 from pydantic import BaseModel
 
 __all__ = [
     "ExchangeRequest",
     "ExchangeResponse",
-    "ExchangeRequestResult",
+    "BinanceExchangeRequestResult",
+    "KuCoinExchangeRequestResult",
 ]
 
 
@@ -24,8 +27,24 @@ class ExchangeResponse(BaseModel):
     updated_at: int
 
 
-class ExchangeRequestResult(BaseModel):
-    price: float | None = None
+class BinanceExchangeRequestResult(BaseModel):
+    price: Decimal | None = None
     symbol: str | None = None
     code: int | None = None
     msg: str | None = None
+
+
+class Data(BaseModel):
+    bestAsk: Decimal
+    bestAskSize: Decimal
+    bestBid: Decimal
+    bestBidSize: Decimal
+    price: Decimal
+    sequence: str
+    size: Decimal
+    time: int
+
+
+class KuCoinExchangeRequestResult(BaseModel):
+    code: str | None
+    data: Data | None
