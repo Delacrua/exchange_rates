@@ -16,12 +16,30 @@ redis_client = redis.Redis(host=settings.REDIS_HOST, db=0)
 
 
 class ExchangeRatesService:
+    """
+    A service class for handling exchange rate requests and fetching exchange rates.
+    """
+
     MANAGERS = {
         "binance": managers.BinanceManager,
         "kucoin": managers.KuCoinManager,
     }
 
     async def find_exchange_rate(self, request_data: ExchangeRateRequest) -> ExchangeRateResponse:
+        """
+        Find the exchange rate for the given currency pair based on the request data.
+        Args:
+            request_data (ExchangeRateRequest): The request data containing the currency pair and other parameters.
+        Returns:
+            ExchangeRateResponse: The response object containing the exchange rate and conversion result.
+        Raises:
+            exceptions.ExchangeRatesServiceException: If the exchange rate for the currency pair cannot be found on
+            any supported exchange.
+        This method first checks if cached data is available in Redis and returns it if it's still valid.
+        If no cached data is available, it attempts to fetch the exchange rate from the supported exchanges.
+        If the direct conversion fails, it tries to fetch the exchange rate using an intermediary currency.
+        If successful, it caches the result in Redis and returns the response object.
+        """
         if request_data.cache_max_seconds:
             response = self._get_redis_cached_data(request_data)
             if response:
@@ -51,6 +69,19 @@ class ExchangeRatesService:
         return ExchangeRateResponse.model_validate(response_dict)
 
     async def _fetch_pair_conversion_rate(self, request_data: ExchangeRateRequest) -> tuple[Decimal | None, str | None]:
+        """
+        Fetch the exchange rate for the given currency pair from the requested exchange or supported exchanges
+        Args:
+            request_data (ExchangeRateRequest): The request data containing the currency pair and other parameters
+        Returns:
+            tuple[Decimal | None, str | None]: A tuple containing the exchange rate and the exchange name,
+            or None if not found
+        Raises:
+            exceptions.ExchangeRatesServiceException: If unable to contact any of the supported exchanges
+        This method attempts to fetch the exchange rate for the given currency pair from the requested exchange
+        or iterates through the supported exchanges until a valid exchange rate is found.
+        """
+
         rate = None
         if (exchange := request_data.exchange) is None:
             requests_failed = {k: False for k in self.MANAGERS}
@@ -84,12 +115,34 @@ class ExchangeRatesService:
 
     @staticmethod
     async def _get_intermediary_currency(currency_from, currency_to) -> str:
+        """
+        Get the intermediary currency for converting between the given currency pair
+        Args:
+            currency_from (str): The base currency code.
+            currency_to (str): The target currency code
+        Returns:
+            str: The intermediary currency code
+        Note:
+            This method is not implemented yet and currently returns a hardcoded value.
+        """
         return "USDT"  # TO DO
 
     async def _fetch_pair_conversion_rate_with_intermediary_currency(
         self,
         request_data: ExchangeRateRequest,
     ) -> tuple[Decimal | None, str | None]:
+        """
+        Fetch the exchange rate for the given currency pair using an intermediary currency
+        Args:
+            request_data (ExchangeRateRequest): The request data containing the currency pair and other parameters
+        Returns:
+            tuple[Decimal | None, str | None]: A tuple containing the exchange rate and the exchange name,
+            or None if not found
+        This method fetches the exchange rates for converting the base currency to the intermediary currency
+        and the intermediary currency to the target currency. It then calculates the overall exchange rate
+        by multiplying the two rates.
+        """
+
         intermediary_currency = await self._get_intermediary_currency(
             request_data.currency_from,
             request_data.currency_to,
@@ -121,6 +174,18 @@ class ExchangeRatesService:
     def _form_response_dict(
         currency_from: str, currency_to: str, exchange: str, rate: Decimal, amount: Decimal
     ) -> dict:
+        """
+        Form the response dictionary with the exchange rate and conversion result
+        Args:
+            currency_from (str): The base currency code.
+            currency_to (str): The target currency code.
+            exchange (str): The name of the exchange.
+            rate (Decimal): The exchange rate.
+            amount (Decimal): The amount to be converted
+        Returns:
+            dict: A dictionary containing the exchange rate information and conversion result.
+        """
+
         return {
             "currency_from": currency_from,
             "currency_to": currency_to,
@@ -131,6 +196,17 @@ class ExchangeRatesService:
         }
 
     def _get_redis_cached_data(self, request_data: ExchangeRateRequest) -> dict | None:
+        """
+        Get the cached exchange rate data from Redis based on the request data
+        Args:
+            request_data (ExchangeRateRequest): The request data containing the currency pair and other parameters
+        Returns:
+            dict | None: The cached exchange rate data if available, or None if not found
+        This method checks if cached data is available in Redis for the given currency pair and exchange.
+        If the exchange is specified in the request data, it checks for cached data for that exchange.
+        If the exchange is not specified, it checks for cached data across all supported exchanges.
+        """
+
         if request_data.exchange:
             data = self._get_redis_exchange_data_by_key(
                 currency_from=request_data.currency_from,
@@ -159,6 +235,17 @@ class ExchangeRatesService:
         exchange: str,
         cache_max_seconds: int,
     ) -> dict | None:
+        """
+        Get the cached exchange rate data from Redis for the given currency pair, exchange, and cache duration
+        Args:
+            currency_from (str): The base currency code.
+            currency_to (str): The target currency code.
+            exchange (str): The name of the exchange.
+            cache_max_seconds (int): The maximum duration for which the cached data is considered valid
+        Returns:
+            dict | None: The cached exchange rate data if available and still valid, or None if not found or expired.
+        """
+
         if byte_data := redis_client.get(f"{currency_from}{currency_to}-{exchange}"):
             response = json.loads(byte_data)  # type: ignore[arg-type]
             if int(response.get("updated_at")) + cache_max_seconds > int(time.time()):
