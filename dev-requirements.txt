@@ -2,6 +2,8 @@ aiohttp==3.9.5
 aiohttp-pydantic==2.1.0
 pydantic==2.7.1
 gunicorn==22.0.0
+redis==5.0.4
+pydantic-settings==2.2.1
 
 # development required dependencies
 mypy==1.10.0

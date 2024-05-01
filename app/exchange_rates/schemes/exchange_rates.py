@@ -1,6 +1,7 @@
 from decimal import Decimal
+from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 __all__ = [
     "ExchangeRequest",
@@ -10,10 +11,17 @@ __all__ = [
 ]
 
 
+class ExchangeEnum(str, Enum):
+    Binance = "binance"
+    KuCoin = "kucoin"
+
+
 class ExchangeRequest(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     currency_from: str
     currency_to: str
-    exchange: str | None
+    exchange: ExchangeEnum | None | str
     amount: int
     cache_max_seconds: int | None
 
