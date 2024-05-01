@@ -1,6 +1,6 @@
 # Exchange_rates
 
-This project is a service for fetching and converting exchange rates between different currencies. 
+This project is a aiohttp web service for fetching and converting exchange rates between different currencies. 
 It supports retrieving exchange rates from various cryptocurrency exchanges and caching the results 
 for improved performance.
 Currently supports Binance and KuCoin as available exchanges.
