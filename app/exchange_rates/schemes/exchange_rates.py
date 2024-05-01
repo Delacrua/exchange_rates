@@ -3,6 +3,7 @@ from pydantic import BaseModel
 __all__ = [
     "ExchangeRequest",
     "ExchangeResponse",
+    "ExchangeRequestResult",
 ]
 
 
@@ -21,3 +22,10 @@ class ExchangeResponse(BaseModel):
     rate: str
     result: str
     updated_at: int
+
+
+class ExchangeRequestResult(BaseModel):
+    price: float | None = None
+    symbol: str | None = None
+    code: int | None = None
+    msg: str | None = None

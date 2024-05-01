@@ -20,3 +20,6 @@ def init_app(args=None) -> web.Application:
 
 
 app = init_app(setup_app)
+
+if __name__ == "__main__":
+    web.run_app(app, port=8888)

@@ -8,7 +8,10 @@ from app.exchange_rates.services.exchange_rates import ExchangeRatesService
 
 class ExchangeRatesView(PydanticView):
     async def get(self, request: ExchangeRequest) -> r200[ExchangeResponse]:
-        response_data = await ExchangeRatesService.find_exchange_rate(
-            request_data=request
-        )
-        return web.json_response(response_data.model_dump())
+        try:
+            response_data = await ExchangeRatesService().find_exchange_rate(
+                request_data=request
+            )
+            return web.json_response(response_data.model_dump())
+        except Exception as exc:
+            return web.json_response({"error": str(exc)}, status=400)
