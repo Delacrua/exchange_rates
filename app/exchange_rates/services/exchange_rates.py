@@ -35,7 +35,11 @@ class ExchangeRatesService:
                 "Currency pair is incorrect or not supported."
             )
         response_dict = self._form_response_dict(
-            exchange=exchange, rate=rate, amount=request_data.amount  # type: ignore[arg-type]
+            currency_from=request_data.currency_from,
+            currency_to=request_data.currency_to,
+            exchange=exchange,  # type: ignore[arg-type]
+            rate=rate,
+            amount=request_data.amount,  # type: ignore[arg-type]
         )
 
         redis_client.set(
@@ -77,10 +81,10 @@ class ExchangeRatesService:
         return rate, exchange
 
     @staticmethod
-    def _form_response_dict(exchange: str, rate: Decimal, amount: int) -> dict:
+    def _form_response_dict(currency_from: str, currency_to: str, exchange: str, rate: Decimal, amount: int) -> dict:
         return {
-            "currency_from": "USDT",
-            "currency_to": "TRX",
+            "currency_from": currency_from,
+            "currency_to": currency_to,
             "exchange": f"{exchange}",
             "rate": f"{rate:.4f}",
             "result": f"{amount * rate:.2f}",
