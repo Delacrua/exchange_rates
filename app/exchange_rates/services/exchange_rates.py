@@ -28,7 +28,6 @@ class ExchangeRatesService:
                 return ExchangeRateResponse.model_validate(response)
 
         rate, exchange = await self._fetch_pair_conversion_rate(request_data)
-
         if rate is None:
             rate, exchange = await self._fetch_pair_conversion_rate_with_intermediary_currency(request_data)
 
