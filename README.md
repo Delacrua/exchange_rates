@@ -57,3 +57,10 @@ This command will perform the following actions:
 - Sort imports using `isort`
 - Format code using `black` with a line length of 120 characters
 - Check type annotations using `mypy`
+
+## Using Project
+
+Implemented API Swagger is available at
+```
+http://127.0.0.1:8888/docs
+```
