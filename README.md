@@ -60,7 +60,7 @@ This command will perform the following actions:
 
 ## Using Project
 
-Implemented API Swagger is available at
+Swagger documentation for implemented API is available at
 ```
 http://127.0.0.1:8888/docs
 ```
