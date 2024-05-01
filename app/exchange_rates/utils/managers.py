@@ -27,9 +27,7 @@ class AbstractManager(ABC):
                 try:
                     result = await resp.json()
                 except aiohttp.ClientError:
-                    raise exceptions.ExchangeRequestException(
-                        "Unable to fetch exchange data, exchange not responding"
-                    )
+                    raise exceptions.ExchangeRequestException("Unable to fetch exchange data, exchange not responding")
         return result
 
 
@@ -40,16 +38,12 @@ class BinanceManager(AbstractManager):
         price = None
 
         symbol = f"{currency_from}{currency_to}"
-        response = schemes.BinanceExchangeRequestResult.model_validate(
-            await self._get_symbol_exchange_rate(symbol)
-        )
+        response = schemes.BinanceExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
         if response.price is not None:
             price = response.price
         else:
             symbol = f"{currency_to}{currency_from}"
-            response = schemes.BinanceExchangeRequestResult.model_validate(
-                await self._get_symbol_exchange_rate(symbol)
-            )
+            response = schemes.BinanceExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
             if response.price is not None:
                 price = 1 / response.price
 
@@ -61,24 +55,18 @@ class BinanceManager(AbstractManager):
 
 
 class KuCoinManager(AbstractManager):
-    GET_EXCHANGE_RATE_URL = (
-        f"https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=%s"
-    )
+    GET_EXCHANGE_RATE_URL = f"https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=%s"
 
     async def get_exchange_rate(self, currency_from: str, currency_to: str) -> Decimal:
         price = None
 
         symbol = f"{currency_from}-{currency_to}"
-        response = schemes.KuCoinExchangeRequestResult.model_validate(
-            await self._get_symbol_exchange_rate(symbol)
-        )
+        response = schemes.KuCoinExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
         if response.data is not None:
             price = response.data.price
         else:
             symbol = f"{currency_to}-{currency_from}"
-            response = schemes.KuCoinExchangeRequestResult.model_validate(
-                await self._get_symbol_exchange_rate(symbol)
-            )
+            response = schemes.KuCoinExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
             if response.data is not None:
                 price = 1 / response.data.price
 

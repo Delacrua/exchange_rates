@@ -1,4 +1,4 @@
 run-checks:
 	isort .
-	black .
+	black . -l 120
 	mypy .

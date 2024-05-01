@@ -21,47 +21,13 @@ class ExchangeRatesService:
         "kucoin": managers.KuCoinManager,
     }
 
-    async def find_exchange_rate(
-        self, request_data: ExchangeRequest
-    ) -> ExchangeResponse:
+    async def find_exchange_rate(self, request_data: ExchangeRequest) -> ExchangeResponse:
         if request_data.cache_max_seconds:
             response = self._get_redis_cached_data(request_data)
             if response:
                 return ExchangeResponse.model_validate(response)
 
-        rate = None
-        if (exchange := request_data.exchange) is None:
-            requests_failed = {k: False for k in self.MANAGERS}
-
-            for key, manager_class in self.MANAGERS.items():
-                try:
-                    manager = manager_class()
-                    rate = await manager.get_exchange_rate(
-                        request_data.currency_from, request_data.currency_to
-                    )
-                    exchange = key
-                    if rate:
-                        break
-                except exceptions.ExchangeRequestException as exc:
-                    requests_failed[key] = True
-                    continue
-                except exceptions.ManagerException as exc:
-                    continue
-            if all(map(lambda x: x is True, requests_failed)):
-                raise exceptions.ExchangeRatesServiceException(
-                    "Unable to contact exchanges, all exchanges were not available during requests."
-                )
-
-        else:
-            if manager_class := self.MANAGERS.get(exchange):  # type: ignore
-                manager = manager_class()
-                rate = await manager.get_exchange_rate(
-                    request_data.currency_from, request_data.currency_to
-                )
-            else:
-                raise exceptions.ExchangeRatesServiceException(
-                    "Invalid request parameter: exchange. The exchange is incorrect or not supported."
-                )
+        rate, exchange = await self._fetch_pair_conversion_rate(request_data)
 
         if rate is None:
             raise exceptions.ExchangeRatesServiceException(
@@ -77,6 +43,38 @@ class ExchangeRatesService:
             json.dumps(response_dict),
         )
         return ExchangeResponse.model_validate(response_dict)
+
+    async def _fetch_pair_conversion_rate(self, request_data: ExchangeRequest) -> tuple[Decimal | None, str | None]:
+        rate = None
+        if (exchange := request_data.exchange) is None:
+            requests_failed = {k: False for k in self.MANAGERS}
+
+            for key, manager_class in self.MANAGERS.items():
+                try:
+                    manager = manager_class()
+                    rate = await manager.get_exchange_rate(request_data.currency_from, request_data.currency_to)
+                    exchange = key
+                    if rate:
+                        break
+                except exceptions.ExchangeRequestException as exc:
+                    requests_failed[key] = True
+                    continue
+                except exceptions.ManagerException as exc:
+                    continue
+            if all(map(lambda x: x is True, requests_failed)):
+                raise exceptions.ExchangeRatesServiceException(
+                    "Unable to contact exchanges, all exchanges were not available during requests."
+                )
+        else:
+            if manager_class := self.MANAGERS.get(exchange):  # type: ignore
+                manager = manager_class()
+                rate = await manager.get_exchange_rate(request_data.currency_from, request_data.currency_to)
+            else:
+                raise exceptions.ExchangeRatesServiceException(
+                    "Invalid request parameter: exchange. The exchange is incorrect or not supported."
+                )
+
+        return rate, exchange
 
     @staticmethod
     def _form_response_dict(exchange: str, rate: Decimal, amount: int) -> dict:
