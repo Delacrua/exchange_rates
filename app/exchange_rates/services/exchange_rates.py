@@ -1,3 +1,4 @@
+import time
 from decimal import Decimal
 from typing import TypeVar
 
@@ -63,7 +64,7 @@ class ExchangeRatesService:
                 "exchange": f"{exchange}",
                 "rate": f"{rate:.4f}",
                 "result": f"{request_data.amount * rate:.2f}",
-                "updated_at": 1714304596,
+                "updated_at": int(time.time()),
             }
         )
         return response
