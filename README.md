@@ -41,6 +41,11 @@ make run-project
 ```
 This command will start the application using Docker Compose, including any necessary dependencies.
 
+Swagger documentation for implemented API is available at
+```
+http://127.0.0.1:8888/docs
+```
+
 ## Development
 
 ### Running Checks
@@ -57,10 +62,3 @@ This command will perform the following actions:
 - Sort imports using `isort`
 - Format code using `black` with a line length of 120 characters
 - Check type annotations using `mypy`
-
-## Using Project
-
-Swagger documentation for implemented API is available at
-```
-http://127.0.0.1:8888/docs
-```
