@@ -38,12 +38,12 @@ class BinanceManager(AbstractManager):
         price = None
 
         symbol = f"{currency_from}{currency_to}"
-        response = schemes.BinanceExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
+        response = schemes.BinanceRateRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
         if response.price is not None:
             price = response.price
         else:
             symbol = f"{currency_to}{currency_from}"
-            response = schemes.BinanceExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
+            response = schemes.BinanceRateRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
             if response.price is not None:
                 price = 1 / response.price
 
@@ -61,12 +61,12 @@ class KuCoinManager(AbstractManager):
         price = None
 
         symbol = f"{currency_from}-{currency_to}"
-        response = schemes.KuCoinExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
+        response = schemes.KuCoinRateRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
         if response.data is not None:
             price = response.data.price
         else:
             symbol = f"{currency_to}-{currency_from}"
-            response = schemes.KuCoinExchangeRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
+            response = schemes.KuCoinRateRequestResult.model_validate(await self._get_symbol_exchange_rate(symbol))
             if response.data is not None:
                 price = 1 / response.data.price
 

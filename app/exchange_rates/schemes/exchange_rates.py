@@ -4,10 +4,10 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 __all__ = [
-    "ExchangeRequest",
-    "ExchangeResponse",
-    "BinanceExchangeRequestResult",
-    "KuCoinExchangeRequestResult",
+    "ExchangeRateRequest",
+    "ExchangeRateResponse",
+    "BinanceRateRequestResult",
+    "KuCoinRateRequestResult",
 ]
 
 
@@ -16,7 +16,7 @@ class ExchangeEnum(str, Enum):
     KuCoin = "kucoin"
 
 
-class ExchangeRequest(BaseModel):
+class ExchangeRateRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     currency_from: str
@@ -26,7 +26,7 @@ class ExchangeRequest(BaseModel):
     cache_max_seconds: int | None
 
 
-class ExchangeResponse(BaseModel):
+class ExchangeRateResponse(BaseModel):
     currency_from: str
     currency_to: str
     exchange: str
@@ -35,7 +35,7 @@ class ExchangeResponse(BaseModel):
     updated_at: int
 
 
-class BinanceExchangeRequestResult(BaseModel):
+class BinanceRateRequestResult(BaseModel):
     price: Decimal | None = None
     symbol: str | None = None
     code: int | None = None
@@ -53,6 +53,6 @@ class Data(BaseModel):
     time: int
 
 
-class KuCoinExchangeRequestResult(BaseModel):
+class KuCoinRateRequestResult(BaseModel):
     code: str | None
     data: Data | None

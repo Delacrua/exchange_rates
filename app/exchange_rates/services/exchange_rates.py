@@ -5,7 +5,7 @@ from typing import TypeVar
 
 import redis
 
-from app.exchange_rates.schemes import ExchangeRequest, ExchangeResponse
+from app.exchange_rates.schemes import ExchangeRateRequest, ExchangeRateResponse
 from app.exchange_rates.utils import exceptions  # type: ignore
 from app.exchange_rates.utils import managers
 from app.settings import settings
@@ -21,11 +21,11 @@ class ExchangeRatesService:
         "kucoin": managers.KuCoinManager,
     }
 
-    async def find_exchange_rate(self, request_data: ExchangeRequest) -> ExchangeResponse:
+    async def find_exchange_rate(self, request_data: ExchangeRateRequest) -> ExchangeRateResponse:
         if request_data.cache_max_seconds:
             response = self._get_redis_cached_data(request_data)
             if response:
-                return ExchangeResponse.model_validate(response)
+                return ExchangeRateResponse.model_validate(response)
 
         rate, exchange = await self._fetch_pair_conversion_rate(request_data)
 
@@ -42,9 +42,9 @@ class ExchangeRatesService:
             f"{request_data.currency_from}{request_data.currency_to}-{exchange}",
             json.dumps(response_dict),
         )
-        return ExchangeResponse.model_validate(response_dict)
+        return ExchangeRateResponse.model_validate(response_dict)
 
-    async def _fetch_pair_conversion_rate(self, request_data: ExchangeRequest) -> tuple[Decimal | None, str | None]:
+    async def _fetch_pair_conversion_rate(self, request_data: ExchangeRateRequest) -> tuple[Decimal | None, str | None]:
         rate = None
         if (exchange := request_data.exchange) is None:
             requests_failed = {k: False for k in self.MANAGERS}
@@ -87,7 +87,7 @@ class ExchangeRatesService:
             "updated_at": int(time.time()),
         }
 
-    def _get_redis_cached_data(self, request_data: ExchangeRequest) -> dict | None:
+    def _get_redis_cached_data(self, request_data: ExchangeRateRequest) -> dict | None:
         if request_data.exchange:
             data = self._get_redis_exchange_data_by_key(
                 currency_from=request_data.currency_from,
