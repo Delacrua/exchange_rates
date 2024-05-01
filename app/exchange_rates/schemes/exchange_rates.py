@@ -22,7 +22,7 @@ class ExchangeRateRequest(BaseModel):
     currency_from: str
     currency_to: str
     exchange: ExchangeEnum | None | str
-    amount: int
+    amount: Decimal
     cache_max_seconds: int | None
 
 

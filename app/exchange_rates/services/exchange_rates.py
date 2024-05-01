@@ -30,6 +30,9 @@ class ExchangeRatesService:
         rate, exchange = await self._fetch_pair_conversion_rate(request_data)
 
         if rate is None:
+            rate, exchange = await self._fetch_pair_conversion_rate_with_intermediary_currency(request_data)
+
+        if rate is None:
             raise exceptions.ExchangeRatesServiceException(
                 "Could not find exchange rate for currency pair on any of the supported exchanges. "
                 "Currency pair is incorrect or not supported."
@@ -81,7 +84,48 @@ class ExchangeRatesService:
         return rate, exchange
 
     @staticmethod
-    def _form_response_dict(currency_from: str, currency_to: str, exchange: str, rate: Decimal, amount: int) -> dict:
+    async def _get_intermediary_currency(currency_from, currency_to) -> str:
+        return "USDT"  # TO DO
+
+    async def _fetch_pair_conversion_rate_with_intermediary_currency(
+        self,
+        request_data: ExchangeRateRequest,
+    ) -> tuple[Decimal | None, str | None]:
+        intermediary_currency = await self._get_intermediary_currency(
+            request_data.currency_from,
+            request_data.currency_to,
+        )
+        rate = None
+        if (exchange := request_data.exchange) is None:
+            for key, manager_class in self.MANAGERS.items():
+                try:
+                    manager = manager_class()
+                    rate_1 = await manager.get_exchange_rate(request_data.currency_from, intermediary_currency)
+                    rate_2 = await manager.get_exchange_rate(intermediary_currency, request_data.currency_to)
+                    rate = rate_1 * rate_2
+                    exchange = key
+                    if rate:
+                        break
+                except exceptions.ManagerException as exc:
+                    continue
+
+        else:
+            if manager_class := self.MANAGERS.get(exchange):  # type: ignore
+                manager = manager_class()
+                rate_1 = await manager.get_exchange_rate(request_data.currency_from, intermediary_currency)
+                rate_2 = await manager.get_exchange_rate(intermediary_currency, request_data.currency_to)
+                rate = rate_1 * rate_2
+            else:
+                raise exceptions.ExchangeRatesServiceException(
+                    "Invalid request parameter: exchange. The exchange is incorrect or not supported."
+                )
+
+        return rate, exchange
+
+    @staticmethod
+    def _form_response_dict(
+        currency_from: str, currency_to: str, exchange: str, rate: Decimal, amount: Decimal
+    ) -> dict:
         return {
             "currency_from": currency_from,
             "currency_to": currency_to,
