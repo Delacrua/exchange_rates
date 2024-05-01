@@ -115,10 +115,6 @@ class ExchangeRatesService:
                 rate_1 = await manager.get_exchange_rate(request_data.currency_from, intermediary_currency)
                 rate_2 = await manager.get_exchange_rate(intermediary_currency, request_data.currency_to)
                 rate = rate_1 * rate_2
-            else:
-                raise exceptions.ExchangeRatesServiceException(
-                    "Invalid request parameter: exchange. The exchange is incorrect or not supported."
-                )
 
         return rate, exchange
 
