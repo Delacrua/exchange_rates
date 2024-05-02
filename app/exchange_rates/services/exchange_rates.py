@@ -10,6 +10,11 @@ from app.exchange_rates.utils import exceptions  # type: ignore
 from app.exchange_rates.utils import managers
 from app.settings import settings
 
+__all__ = [
+    "ExchangeRatesService",
+]
+
+
 Manager = TypeVar("Manager", bound=managers.AbstractManager)
 
 redis_client = redis.Redis(host=settings.REDIS_HOST, db=0)
