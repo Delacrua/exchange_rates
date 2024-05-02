@@ -130,3 +130,16 @@ class TestExchangeRatesService:
 
             assert rate == Decimal("8.4400") * Decimal("8.4400")
             assert exchange == "binance"
+
+    async def test_get_redis_cached_data(self, monkeypatch):
+        """
+        Test the _get_redis_cached_data method.
+        """
+        service = ExchangeRatesService()
+        monkeypatch.setattr(
+            service,
+            "_get_redis_exchange_data_by_key",
+            AsyncMock(return_value={"rate": "8.4400"}),
+        )
+        response = await service._get_redis_cached_data(REQUEST_DATA)
+        assert response == {"rate": "8.4400"}
