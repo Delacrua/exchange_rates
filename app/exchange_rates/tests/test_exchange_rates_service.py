@@ -1,3 +1,4 @@
+import json
 import time
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -5,7 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.exchange_rates.schemes import ExchangeRateRequest, ExchangeRateResponse
-from app.exchange_rates.services import ExchangeRatesService
+from app.exchange_rates.services import ExchangeRatesService, exchange_rates
+from app.exchange_rates.services.exchange_rates import redis_client
 from app.exchange_rates.utils import exceptions
 
 # Test data
@@ -37,7 +39,7 @@ class TestExchangeRatesService:
                     "exchange": "binance",
                     "rate": "8.4400",
                     "result": "84400",
-                    "updated_at": int(time.time()),
+                    "updated_at": 1683027600,
                 }
             ),
         )
@@ -143,3 +145,31 @@ class TestExchangeRatesService:
         )
         response = await service._get_redis_cached_data(REQUEST_DATA)
         assert response == {"rate": "8.4400"}
+
+    async def test_get_redis_exchange_data_by_key(self, monkeypatch):
+        """
+        Test the _get_redis_exchange_data_by_key method.
+        """
+        service = ExchangeRatesService()
+        expected_key = "USDTTRX-binance"
+        expected_response = {
+            "currency_from": "USDT",
+            "currency_to": "TRX",
+            "exchange": "binance",
+            "rate": "8.4400",
+            "result": "84400",
+            "updated_at": int(time.time()),
+        }
+        mock_redis_client = MagicMock()
+        mock_redis_client.get.return_value = json.dumps(expected_response)
+        monkeypatch.setattr(redis_client, "get", mock_redis_client.get)
+
+        response = service._get_redis_exchange_data_by_key(
+            currency_from="USDT",
+            currency_to="TRX",
+            exchange="binance",
+            cache_max_seconds=60,
+        )  # act
+
+        assert response == expected_response
+        mock_redis_client.get.assert_called_once_with(expected_key)
