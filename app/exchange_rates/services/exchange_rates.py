@@ -67,11 +67,15 @@ class ExchangeRatesService:
             amount=request_data.amount,  # type: ignore[arg-type]
         )
 
+        self._set_redis_cache_data(response_dict)
+        return ExchangeRateResponse.model_validate(response_dict)
+
+    @staticmethod
+    def _set_redis_cache_data(response_dict: dict):
         redis_client.set(
-            f"{request_data.currency_from}{request_data.currency_to}-{exchange}",
+            f"{response_dict.get("currency_from")}{response_dict.get("currency_to")}-{response_dict.get("exchange")}",
             json.dumps(response_dict),
         )
-        return ExchangeRateResponse.model_validate(response_dict)
 
     async def _fetch_pair_conversion_rate(self, request_data: ExchangeRateRequest) -> tuple[Decimal | None, str | None]:
         """

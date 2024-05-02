@@ -52,6 +52,7 @@ class TestExchangeRatesService:
         """
         service = ExchangeRatesService()
         monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
+        monkeypatch.setattr(service, "_set_redis_cache_data", MagicMock(return_value=None))
         monkeypatch.setattr(
             service, "_fetch_pair_conversion_rate", AsyncMock(return_value=(Decimal("8.4400"), "binance"))
         )
@@ -66,6 +67,7 @@ class TestExchangeRatesService:
         """
         service = ExchangeRatesService()
         monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
+        monkeypatch.setattr(service, "_set_redis_cache_data", MagicMock(return_value=None))
         monkeypatch.setattr(service, "_fetch_pair_conversion_rate", AsyncMock(return_value=(None, None)))
         monkeypatch.setattr(
             service,
@@ -109,4 +111,22 @@ class TestExchangeRatesService:
             rate, exchange = await service._fetch_pair_conversion_rate(request_data)  # act
 
             assert rate == Decimal("8.4400")
+            assert exchange == "binance"
+
+    async def test_fetch_pair_conversion_rate_with_intermediary_currency(self, monkeypatch):
+        """
+        Test the _fetch_pair_conversion_rate_with_intermediary_currency method works correctly.
+        """
+        service = ExchangeRatesService()
+        monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
+
+        mock_coroutine = AsyncMock()
+        mock_coroutine.get_exchange_rate.return_value = Decimal("8.4400")
+
+        with patch.dict(service.MANAGERS, {"binance": lambda: mock_coroutine}):
+            request_data = REQUEST_DATA
+
+            rate, exchange = await service._fetch_pair_conversion_rate_with_intermediary_currency(request_data)  # act
+
+            assert rate == Decimal("8.4400") * Decimal("8.4400")
             assert exchange == "binance"
