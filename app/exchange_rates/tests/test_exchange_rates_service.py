@@ -8,6 +8,7 @@ import pytest
 from app.exchange_rates.schemes import ExchangeRateRequest, ExchangeRateResponse
 from app.exchange_rates.services import ExchangeRatesService
 from app.exchange_rates.utils import exceptions
+from app.exchange_rates.utils.managers import BinanceManager
 
 # Test data
 REQUEST_DATA = ExchangeRateRequest.model_validate(
@@ -80,7 +81,27 @@ class TestExchangeRatesService:
         monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
         monkeypatch.setattr(service, "_fetch_pair_conversion_rate", AsyncMock(return_value=(None, None)))
         monkeypatch.setattr(
-            service, "_fetch_pair_conversion_rate_with_intermediary_currency", AsyncMock(return_value=(None, None))
+            service,
+            "_fetch_pair_conversion_rate_with_intermediary_currency",
+            AsyncMock(return_value=(None, None)),
         )
         with pytest.raises(exceptions.ExchangeRatesServiceException):
             await service.find_exchange_rate(REQUEST_DATA)
+
+    async def test_fetch_pair_conversion_rate_success(self, monkeypatch):
+        # Setup
+        service = ExchangeRatesService()
+        monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
+
+        mock_coroutine = AsyncMock()
+        mock_coroutine.get_exchange_rate.return_value = Decimal("8.4400")
+
+        with patch.dict(service.MANAGERS, {"binance": lambda: mock_coroutine}):
+            request_data = REQUEST_DATA
+
+            # Execution
+            rate, exchange = await service._fetch_pair_conversion_rate(request_data)
+
+            # Assertion
+            assert rate == Decimal("8.4400")
+            assert exchange == "binance"
