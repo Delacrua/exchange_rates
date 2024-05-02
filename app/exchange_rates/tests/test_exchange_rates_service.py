@@ -41,7 +41,9 @@ class TestExchangeRatesService:
                 }
             ),
         )
-        response = await service.find_exchange_rate(REQUEST_DATA)
+
+        response = await service.find_exchange_rate(REQUEST_DATA)  # act
+
         assert response.rate == "8.4400"
 
     async def test_find_exchange_rate_without_cached_data(self, monkeypatch):
@@ -53,7 +55,9 @@ class TestExchangeRatesService:
         monkeypatch.setattr(
             service, "_fetch_pair_conversion_rate", AsyncMock(return_value=(Decimal("8.4400"), "binance"))
         )
-        response = await service.find_exchange_rate(REQUEST_DATA)
+
+        response = await service.find_exchange_rate(REQUEST_DATA)  # act
+
         assert response.rate == "8.4400"
 
     async def test_find_exchange_rate_with_intermediary_currency(self, monkeypatch):
@@ -68,7 +72,9 @@ class TestExchangeRatesService:
             "_fetch_pair_conversion_rate_with_intermediary_currency",
             AsyncMock(return_value=(Decimal("8.4400"), "binance")),
         )
-        response = await service.find_exchange_rate(REQUEST_DATA)
+
+        response = await service.find_exchange_rate(REQUEST_DATA)  # act
+
         assert response.rate == "8.4400"
 
     async def test_find_exchange_rate_failure(self, monkeypatch):
@@ -83,8 +89,9 @@ class TestExchangeRatesService:
             "_fetch_pair_conversion_rate_with_intermediary_currency",
             AsyncMock(return_value=(None, None)),
         )
+
         with pytest.raises(exceptions.ExchangeRatesServiceException):
-            await service.find_exchange_rate(REQUEST_DATA)
+            await service.find_exchange_rate(REQUEST_DATA)  # act
 
     async def test_fetch_pair_conversion_rate_success(self, monkeypatch):
         """
