@@ -1,4 +1,3 @@
-import asyncio
 import time
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -8,7 +7,6 @@ import pytest
 from app.exchange_rates.schemes import ExchangeRateRequest, ExchangeRateResponse
 from app.exchange_rates.services import ExchangeRatesService
 from app.exchange_rates.utils import exceptions
-from app.exchange_rates.utils.managers import BinanceManager
 
 # Test data
 REQUEST_DATA = ExchangeRateRequest.model_validate(
