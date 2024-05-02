@@ -87,7 +87,9 @@ class TestExchangeRatesService:
             await service.find_exchange_rate(REQUEST_DATA)
 
     async def test_fetch_pair_conversion_rate_success(self, monkeypatch):
-        # Setup
+        """
+        Test the _fetch_pair_conversion_rate method works correctly.
+        """
         service = ExchangeRatesService()
         monkeypatch.setattr(service, "_get_redis_cached_data", MagicMock(return_value=None))
 
@@ -97,9 +99,7 @@ class TestExchangeRatesService:
         with patch.dict(service.MANAGERS, {"binance": lambda: mock_coroutine}):
             request_data = REQUEST_DATA
 
-            # Execution
-            rate, exchange = await service._fetch_pair_conversion_rate(request_data)
+            rate, exchange = await service._fetch_pair_conversion_rate(request_data)  # act
 
-            # Assertion
             assert rate == Decimal("8.4400")
             assert exchange == "binance"
